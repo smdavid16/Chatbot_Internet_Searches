@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./searxng_settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080/
+      - SEARXNG_SECRET=my_custom_secret_key_987654
+      - SEARXNG_SEARCH_FORMATS=html,json
+      - SEARXNG_LIMITER=false
+    restart: unless-stopped

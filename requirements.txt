@@ -1,0 +1,7 @@
+ollama
+requests
+beautifulsoup4
+ntplib
+chromadb
+sentence-transformers
+python-dotenv
