@@ -15,10 +15,14 @@ import textwrap
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, available_timezones
 
+# pyrefly: ignore [missing-import]
 import ntplib
 import ollama
+# pyrefly: ignore [missing-import]
 import requests
+# pyrefly: ignore [missing-import]
 from bs4 import BeautifulSoup
+# pyrefly: ignore [missing-import]
 from urllib.parse import unquote
 
 from config import (
@@ -34,8 +38,9 @@ from config import (
     CACHE_SIMILARITY_THRESHOLD,
 )
 from search_cache import SearchCache
+from translator import translate_to_english, translate_to_romanian, get_loaded_model_name
 
-# ── Colours for the terminal ────────────────────────────────────────────────
+# Terminal colours
 CYAN    = "\033[96m"
 GREEN   = "\033[92m"
 YELLOW  = "\033[93m"
@@ -91,7 +96,6 @@ def google_search(query: str) -> str:
     you need up-to-date information from the internet.  The answer
     to the user's question is in the KEY FACTS section."""
 
-    # ── Check cache first ─────────────────────────────────────────────
     cached = _cache.lookup(query)
     if cached:
         print(f"\n  {GREEN}💾  Cache hit! Returning saved results for similar query.{RESET}")
@@ -356,12 +360,12 @@ def _fetch_page(url: str, max_length: int | None = None) -> str:
         if meta_desc and meta_desc.get("content"):
             summary_parts.append(f"Description: {meta_desc['content'].strip()}")
 
-        # og:description (often more detailed)
+        # og:description
         og_desc = soup.find("meta", attrs={"property": "og:description"})
         if og_desc and og_desc.get("content"):
             summary_parts.append(f"Summary: {og_desc['content'].strip()}")
 
-        # Headings (h1, h2) — often contain key facts
+        # h1, h2
         headings = []
         for tag in soup.find_all(["h1", "h2"], limit=10):
             heading_text = tag.get_text(strip=True)
@@ -370,14 +374,14 @@ def _fetch_page(url: str, max_length: int | None = None) -> str:
         if headings:
             summary_parts.append("Key Headings:\n" + "\n".join(headings))
 
-        # ── Remove non-content elements ───────────────────────────────
+        # Remove non-content elements
         for tag in soup(["script", "style", "nav", "header", "footer",
                          "aside", "form", "noscript", "iframe", "svg",
                          "button", "input", "select", "textarea",
                          "menu", "menuitem"]):
             tag.decompose()
 
-        # ── Try to find the main content area ─────────────────────────
+        # main content area
         main_content = None
 
         # Priority 1: <article> tag
@@ -395,7 +399,7 @@ def _fetch_page(url: str, max_length: int | None = None) -> str:
         if not main_content:
             for selector in [
                 {"id": "content"}, {"id": "main-content"},
-                {"id": "mw-content-text"},  # Wikipedia
+                {"id": "mw-content-text"},
                 {"class_": "post-content"}, {"class_": "article-body"},
                 {"class_": "entry-content"}, {"class_": "story-body"},
                 {"role": "main"},
@@ -613,11 +617,21 @@ def agent_turn(messages: list[dict]) -> str:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
+    # ── Load translation model eagerly so banner shows status ─────
+    translation_model = get_loaded_model_name()
+
     print(f"\n{BOLD}{CYAN}╔══════════════════════════════════════════════╗{RESET}")
     print(f"{BOLD}{CYAN}║   🌐  Internet Search Chatbot               ║{RESET}")
     print(f"{BOLD}{CYAN}║   Model: {MODEL_NAME:<36}║{RESET}")
+    if translation_model:
+        # Shorten the model name for display
+        short_name = translation_model.split('/')[-1]
+        print(f"{BOLD}{CYAN}║   Translation: {short_name:<30}║{RESET}")
+    else:
+        print(f"{BOLD}{CYAN}║   Translation: {RED}disabled{CYAN}                      ║{RESET}")
     print(f"{BOLD}{CYAN}╚══════════════════════════════════════════════╝{RESET}")
-    print(f"{DIM}Type your message and press Enter. Type 'quit' or 'exit' to leave.{RESET}\n")
+    print(f"{DIM}Type your message and press Enter. Type 'quit' or 'exit' to leave.{RESET}")
+    print(f"{DIM}Romanian input is auto-detected and translated.{RESET}\n")
 
     # Conversation history persists across turns for memory
     messages: list[dict] = [
@@ -652,7 +666,12 @@ def main():
             print(f"   Similarity threshold: {stats['similarity_threshold']}\n")
             continue
 
-        messages.append({"role": "user", "content": user_input})
+        # ── Translate user input (Romanian → English if needed) ───────
+        english_input, was_translated = translate_to_english(user_input)
+        if was_translated:
+            print(f"   Translated: \"{english_input}\"{RESET}")
+
+        messages.append({"role": "user", "content": english_input})
 
         print(f"\n{DIM}Thinking…{RESET}")
 
@@ -664,7 +683,13 @@ def main():
 
         messages.append({"role": "assistant", "content": answer})
 
-        print(f"\n{CYAN}{BOLD}Assistant:{RESET} {answer}\n")
+        # ── Translate response (English → Romanian if user spoke Romanian)
+        if was_translated:
+            ro_answer = translate_to_romanian(answer)
+            print(f"\n{CYAN}{BOLD}Assistant:{RESET} {ro_answer}")
+            print(f"{DIM}  [EN: {answer}]{RESET}\n")
+        else:
+            print(f"\n{CYAN}{BOLD}Assistant:{RESET} {answer}\n")
 
 
 if __name__ == "__main__":
