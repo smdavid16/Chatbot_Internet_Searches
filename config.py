@@ -26,6 +26,10 @@ CACHE_TTL_SECONDS = 86_400                  # Cache validity: 24 hours
 CACHE_SIMILARITY_THRESHOLD = 0.35           # Max L2 distance for a cache hit
                                             #   Lower = stricter, higher = looser
 
+# ── Biziday News Index (ChromaDB) ───────────────────────────────────────
+BIZIDAY_COLLECTION_NAME = "biziday_news"  # Separate collection for news articles
+BIZIDAY_SEARCH_RESULTS = 5               # Default number of semantic search results
+
 # ── Translation (SeamlessM4T) ───────────────────────────────────────────────
 SEAMLESS_MODEL_LARGE = "facebook/seamless-m4t-v2-large"     # 2.3B params
 SEAMLESS_MODEL_FALLBACK = "facebook/seamless-m4t-medium"    # 1.2B params

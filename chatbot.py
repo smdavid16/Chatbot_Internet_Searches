@@ -38,6 +38,7 @@ from config import (
     CACHE_SIMILARITY_THRESHOLD,
 )
 from search_cache import SearchCache
+from index_biziday import search_biziday_formatted
 from translator import translate_to_english, translate_to_romanian, get_loaded_model_name
 
 # Terminal colours
@@ -58,7 +59,8 @@ _cache = SearchCache(
 )
 
 SYSTEM_PROMPT = textwrap.dedent("""\
-    You are a helpful assistant. You have tools to search the internet.
+    You are a helpful assistant. You have tools to search the internet
+    and to search a local database of Romanian news articles from Biziday.ro.
 
     RULE 1: Your training data is OUTDATED. You MUST use google_search
     to find current facts. NEVER answer factual questions from memory.
@@ -80,6 +82,11 @@ SYSTEM_PROMPT = textwrap.dedent("""\
     RULE 6: Use get_current_weather ONLY when the user asks about the weather.
 
     RULE 7: If you are not sure, SEARCH. When in doubt, SEARCH.
+
+    RULE 8: When the user asks about Romanian news, Biziday, or recent
+    events in Romania, use the search_biziday_news tool FIRST. This
+    tool searches a local database of translated Romanian news articles.
+    The articles are already translated to English for you.
 """)
 
 
@@ -513,6 +520,23 @@ def _extract_relevant_snippets(
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+#  Biziday News Tool
+# ═══════════════════════════════════════════════════════════════════════════
+
+def search_biziday_news(query: str) -> str:
+    """Search the local database of Romanian news articles from Biziday.ro.
+    The articles have been translated to English.  Use this tool when the
+    user asks about Romanian news, Biziday, or recent events in Romania.
+
+    Args:
+        query: The search query in English describing what news to find.
+    """
+    print(f"\n  {DIM}📰  Searching Biziday news for: \"{query}\"{RESET}")
+    result = search_biziday_formatted(query)
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 #  Agent Loop
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -522,10 +546,11 @@ TOOL_REGISTRY = {
     "scrape_webpage": scrape_webpage,
     "get_current_datetime": get_current_datetime,
     "get_current_weather": get_current_weather,
+    "search_biziday_news": search_biziday_news,
 }
 
 # The list of tools Ollama will advertise to the model
-TOOLS = [google_search, scrape_webpage, get_current_datetime, get_current_weather]
+TOOLS = [google_search, scrape_webpage, get_current_datetime, get_current_weather, search_biziday_news]
 
 
 # Keywords that suggest the user is asking a factual question that
