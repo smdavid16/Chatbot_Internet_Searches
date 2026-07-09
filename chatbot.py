@@ -36,9 +36,10 @@ from config import (
     CACHE_DIR,
     CACHE_TTL_SECONDS,
     CACHE_SIMILARITY_THRESHOLD,
+    BIZIDAY_RELEVANCE_THRESHOLD,
 )
 from search_cache import SearchCache
-from index_biziday import search_biziday_formatted
+from index_biziday import search_biziday, search_biziday_formatted, sync_latest_articles
 from translator import translate_to_english, translate_to_romanian, get_loaded_model_name
 
 # Terminal colours
@@ -59,34 +60,36 @@ _cache = SearchCache(
 )
 
 SYSTEM_PROMPT = textwrap.dedent("""\
-    You are a helpful assistant. You have tools to search the internet
-    and to search a local database of Romanian news articles from Biziday.ro.
+    You are a helpful assistant with access to a local news database
+    and internet search tools.
 
-    RULE 1: Your training data is OUTDATED. You MUST use google_search
-    to find current facts. NEVER answer factual questions from memory.
+    IMPORTANT — TOOL PRIORITY ORDER:
 
-    RULE 2: When the user asks about ANY person, leader, president,
-    CEO, event, score, price, or anything that can change — you MUST
-    call google_search FIRST, BEFORE answering.
+    1. LOCAL NEWS FIRST: Before you respond, the system automatically
+       searches the local Biziday.ro news database.  If a
+       [LOCAL NEWS RESULTS] block is present in the conversation,
+       check whether those articles DIRECTLY ANSWER the user's
+       question.  If they do, use them.  If they do NOT answer
+       the question (e.g. they are about a different topic), IGNORE
+       them and use google_search instead.
 
-    RULE 3: After google_search returns results, read the KEY FACTS
-    carefully. The answer is there. Use those facts in your response.
-    Do NOT ignore the search results.
+    2. WEB SEARCH: Use google_search for:
+       - Factual questions about people, places, or history (e.g., "Who is X?", "When was Y born?").
+       - When no [LOCAL NEWS RESULTS] were provided.
+       - When the provided articles do not answer the question.
+       - When the user is asking about something outside news coverage.
 
-    RULE 4: Always include the source URL in your answer.
+    3. SPECIAL TOOLS:
+       - get_current_datetime: ONLY for "what time/date is it".
+       - get_current_weather: ONLY for weather questions.
 
-    RULE 5: Use get_current_datetime ONLY when the user asks "what
-    time is it" or "what is today's date". Do NOT use it to answer
-    factual questions about people or events.
-
-    RULE 6: Use get_current_weather ONLY when the user asks about the weather.
-
-    RULE 7: If you are not sure, SEARCH. When in doubt, SEARCH.
-
-    RULE 8: When the user asks about Romanian news, Biziday, or recent
-    events in Romania, use the search_biziday_news tool FIRST. This
-    tool searches a local database of translated Romanian news articles.
-    The articles are already translated to English for you.
+    RULES:
+    - Your training data is OUTDATED.  Never answer factual questions
+      from memory.  Always rely on tool results or provided context.
+    - ALWAYS answer about the topic the USER asked about.  Do NOT
+      change the topic to something you saw in [LOCAL NEWS RESULTS].
+    - Always include source URLs in your answer.
+    - If local results are insufficient, supplement with google_search.
 """)
 
 
@@ -98,9 +101,9 @@ SYSTEM_PROMPT = textwrap.dedent("""\
 # ═══════════════════════════════════════════════════════════════════════════
 
 def google_search(query: str) -> str:
-    """Search the internet for the given query and return the top results
-    with key facts extracted from each page.  Use this tool whenever
-    you need up-to-date information from the internet.  The answer
+    """Search the internet via Google.  This is a LAST RESORT — only
+    use this tool when search_biziday_news returns no relevant results
+    or when the topic is clearly outside news coverage.  The answer
     to the user's question is in the KEY FACTS section."""
 
     cached = _cache.lookup(query)
@@ -524,9 +527,11 @@ def _extract_relevant_snippets(
 # ═══════════════════════════════════════════════════════════════════════════
 
 def search_biziday_news(query: str) -> str:
-    """Search the local database of Romanian news articles from Biziday.ro.
-    The articles have been translated to English.  Use this tool when the
-    user asks about Romanian news, Biziday, or recent events in Romania.
+    """Search the local database of news articles from Biziday.ro covering
+    Romanian and international news, politics, NATO, EU, economy, defense,
+    and current events. Articles are translated to English. Use this tool ONLY
+    for questions about recent news or current events. For factual questions 
+    about people (e.g. 'Who is X?'), use google_search instead.
 
     Args:
         query: The search query in English describing what news to find.
@@ -534,6 +539,49 @@ def search_biziday_news(query: str) -> str:
     print(f"\n  {DIM}📰  Searching Biziday news for: \"{query}\"{RESET}")
     result = search_biziday_formatted(query)
     return result
+
+
+def _prefetch_biziday(query: str) -> str | None:
+    """Auto-query the local Biziday ChromaDB and return formatted results
+    if relevant matches are found.  Returns None if no relevant articles."""
+    if not query or len(query.strip()) < 3:
+        return None
+
+    try:
+        matches = search_biziday(query)
+    except Exception:
+        return None
+
+    if not matches:
+        return None
+
+    # Filter by relevance — only keep articles within the distance threshold
+    relevant = [m for m in matches if m["distance"] <= BIZIDAY_RELEVANCE_THRESHOLD]
+    if not relevant:
+        return None
+
+    # Limit to top 3 to avoid overwhelming the small model's context
+    relevant = relevant[:3]
+
+    # Format for injection into conversation
+    parts = []
+    for i, m in enumerate(relevant, 1):
+        part = f"[Article {i}] {m['title_en']}\n"
+        part += f"URL: {m['url']}\n"
+        part += f"Date: {m['timestamp']}\n"
+        body = m["body_en"]
+        if len(body) > 1000:
+            body = body[:1000] + "\n[…truncated]"
+        part += f"Content:\n{body}"
+        parts.append(part)
+
+    return (
+        "[LOCAL NEWS RESULTS]\n"
+        "These articles MAY be relevant. Use them ONLY if they directly "
+        "answer the user's question. If they are about a different topic, "
+        "IGNORE them and use google_search instead.\n\n"
+        + "\n\n".join(parts)
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -569,6 +617,28 @@ def agent_turn(messages: list[dict]) -> str:
     and loop until the model produces a final text response."""
 
     used_tool = False
+    prefetch_injected = False
+
+    # ── Auto-prefetch: query local news DB before the model runs ────────
+    user_query = ""
+    for m in reversed(messages):
+        if m.get("role") == "user" or (
+            hasattr(m, "role") and m.role == "user"
+        ):
+            user_query = (
+                m.get("content", "") if isinstance(m, dict)
+                else getattr(m, "content", "")
+            )
+            break
+
+    biziday_context = _prefetch_biziday(user_query)
+    if biziday_context:
+        print(f"  {DIM}📰  Found relevant local news — injecting context…{RESET}")
+        messages.append({
+            "role": "system",
+            "content": biziday_context,
+        })
+        prefetch_injected = True
 
     for iteration in range(MAX_TOOL_ITERATIONS):
         response = ollama.chat(
@@ -582,6 +652,11 @@ def agent_turn(messages: list[dict]) -> str:
         # If no tool calls, we have our final answer — but check if the
         # model skipped searching for a factual question.
         if not assistant_msg.tool_calls:
+            # If prefetch already gave the model context, accept its
+            # answer — don't nudge it into calling another tool.
+            if prefetch_injected:
+                return assistant_msg.content
+
             if not used_tool and iteration < 2:
                 # Check if the user's last message looks factual
                 user_msg = ""
@@ -598,8 +673,10 @@ def agent_turn(messages: list[dict]) -> str:
                     messages.append({
                         "role": "user",
                         "content": (
-                            "You must use a tool (like google_search or get_current_datetime) to answer this "
-                            "question. Do NOT answer from memory. Call a tool now."
+                            "You must use a tool to answer this question. "
+                            "If the question is about recent news or events, use search_biziday_news. "
+                            "If the question is a general factual query (e.g. 'Who is X?'), use google_search. "
+                            "Do NOT answer from memory. Call a tool now."
                         ),
                     })
                     continue
@@ -657,6 +734,10 @@ def main():
     print(f"{BOLD}{CYAN}╚══════════════════════════════════════════════╝{RESET}")
     print(f"{DIM}Type your message and press Enter. Type 'quit' or 'exit' to leave.{RESET}")
     print(f"{DIM}Romanian input is auto-detected and translated.{RESET}\n")
+
+    # ── Auto-sync Biziday news at startup ─────────────────────────
+    sync_latest_articles(count=20)
+    print()
 
     # Conversation history persists across turns for memory
     messages: list[dict] = [

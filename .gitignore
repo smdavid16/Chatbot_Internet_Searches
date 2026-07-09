@@ -4,3 +4,4 @@ __pycache__/
 .env
 *.bin
 chroma.sqlite3
+stiriBiziday.json

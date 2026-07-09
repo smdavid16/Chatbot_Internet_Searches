@@ -29,6 +29,8 @@ CACHE_SIMILARITY_THRESHOLD = 0.35           # Max L2 distance for a cache hit
 # ── Biziday News Index (ChromaDB) ───────────────────────────────────────
 BIZIDAY_COLLECTION_NAME = "biziday_news"  # Separate collection for news articles
 BIZIDAY_SEARCH_RESULTS = 5               # Default number of semantic search results
+BIZIDAY_RELEVANCE_THRESHOLD = 1.0        # Max L2 distance to consider a match "relevant"
+                                         #   (tighter = fewer but more relevant results)
 
 # ── Translation (SeamlessM4T) ───────────────────────────────────────────────
 SEAMLESS_MODEL_LARGE = "facebook/seamless-m4t-v2-large"     # 2.3B params

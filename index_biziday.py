@@ -21,6 +21,8 @@ from config import (
     BIZIDAY_SEARCH_RESULTS,
 )
 from translator import translate_to_english, _chunk_text, _translate
+from scrape_biziday import scrape_homepage, extract_article_text
+from datetime import datetime
 
 # Fix console encoding for Romanian characters (Windows only)
 if sys.platform == "win32":
@@ -166,6 +168,103 @@ def index_articles(json_path: str = DEFAULT_JSON_PATH) -> int:
     print(f"\n{GREEN}✅  Indexed {indexed} articles into '{BIZIDAY_COLLECTION_NAME}' collection{RESET}")
     print(f"   Collection total: {collection.count()} documents\n")
     return indexed
+
+
+def sync_latest_articles(count: int = 20, json_path: str = DEFAULT_JSON_PATH) -> int:
+    """Scrape the homepage for new articles, check against ChromaDB, and index any missing ones.
+    Optionally appends to the JSON file to keep it in sync.
+    """
+    print(f"\n{DIM}🔄  Checking for new Biziday articles...{RESET}")
+    
+    try:
+        latest_articles = scrape_homepage(count)
+    except Exception as exc:
+        print(f"  {RED}✖  Failed to fetch homepage: {exc}{RESET}")
+        return 0
+        
+    if not latest_articles:
+        return 0
+
+    collection = _get_collection()
+    
+    # Load existing JSON if we want to append
+    existing_json = []
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                existing_json = json.load(f)
+        except Exception:
+            pass
+            
+    new_articles_count = 0
+    
+    for item in latest_articles:
+        url = item["url"]
+        headline_ro = item["headline"]
+        doc_id = _make_id(url)
+        
+        # Check if it already exists in ChromaDB
+        result = collection.get(ids=[doc_id])
+        if result and result["ids"]:
+            # Already exists, skip
+            continue
+            
+        print(f"  {GREEN}✦  New article found:{RESET} {headline_ro[:80]}...")
+        
+        # Scrape full text
+        print(f"  {DIM}   📄 Scraping full text...{RESET}")
+        body_ro = extract_article_text(url)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Translate
+        print(f"  {DIM}   🌍 Translating title...{RESET}")
+        title_en = _translate(headline_ro, src_lang="ron", tgt_lang="eng")
+
+        print(f"  {DIM}   🌍 Translating article body...{RESET}")
+        body_en = _translate_article(body_ro)
+        
+        document_text = f"{title_en}\n\n{body_en}"
+        
+        body_ro_stored = body_ro
+        if len(body_ro_stored) > _MAX_METADATA_BODY_CHARS:
+            body_ro_stored = body_ro_stored[:_MAX_METADATA_BODY_CHARS] + "…[truncated]"
+            
+        # Upsert to ChromaDB
+        collection.upsert(
+            ids=[doc_id],
+            documents=[document_text],
+            metadatas=[{
+                "title_ro": headline_ro,
+                "title_en": title_en,
+                "url": url,
+                "timestamp": timestamp,
+                "body_ro": body_ro_stored,
+            }],
+        )
+        
+        # Append to JSON list
+        existing_json.insert(0, {
+            "Titlu": headline_ro,
+            "HTML_Sursa": body_ro,
+            "URL": url,
+            "Timestamp": timestamp,
+        })
+        
+        new_articles_count += 1
+
+    if new_articles_count > 0:
+        # Save updated JSON
+        try:
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(existing_json, f, ensure_ascii=False, indent=2)
+        except Exception as exc:
+            print(f"  {YELLOW}⚠  Could not update JSON backup: {exc}{RESET}")
+            
+        print(f"  {GREEN}✅  Added {new_articles_count} new articles to ChromaDB.{RESET}")
+    else:
+        print(f"  {DIM}✓  No new articles found. DB is up to date.{RESET}")
+        
+    return new_articles_count
 
 
 # ═══════════════════════════════════════════════════════════════════════════
