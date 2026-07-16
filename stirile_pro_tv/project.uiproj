@@ -1,0 +1,6 @@
+{
+  "Name": "Stirile Pro TV",
+  "ProjectType": "Process",
+  "Description": "Blank Process",
+  "MainFile": "Main.xaml"
+}

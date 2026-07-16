@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Model ────────────────────────────────────────────────────────────────────
-MODEL_NAME = "qwen2.5:3b"
+MODEL_NAME = "llama3.1:8b"
 
 # ── API Keys ─────────────────────────────────────────────────────────────────
 OPENWEATHERMAP_API_KEY = os.environ.get("OPENWEATHERMAP_API_KEY")
@@ -27,10 +27,13 @@ CACHE_SIMILARITY_THRESHOLD = 0.35           # Max L2 distance for a cache hit
                                             #   Lower = stricter, higher = looser
 
 # ── Biziday News Index (ChromaDB) ───────────────────────────────────────
-BIZIDAY_COLLECTION_NAME = "biziday_news"  # Separate collection for news articles
+BIZIDAY_COLLECTION_NAME = "news"          # Shared collection for news articles
 BIZIDAY_SEARCH_RESULTS = 5               # Default number of semantic search results
 BIZIDAY_RELEVANCE_THRESHOLD = 1.0        # Max L2 distance to consider a match "relevant"
                                          #   (tighter = fewer but more relevant results)
+
+# ── ProTV News (shares the 'news' collection with Biziday) ──────────────
+PROTV_SCRAPE_COUNT = 20
 
 # ── Translation (SeamlessM4T) ───────────────────────────────────────────────
 SEAMLESS_MODEL_LARGE = "facebook/seamless-m4t-v2-large"     # 2.3B params

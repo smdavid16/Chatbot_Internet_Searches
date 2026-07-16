@@ -116,14 +116,22 @@ _RO_DIACRITICS = set("ăâîșțĂÂÎȘȚ")
 # Common Romanian words that are unlikely in English
 _RO_MARKERS = re.compile(
     r'\b(este|sunt|care|pentru|despre|poate|acum|unde|cine|când|cum|într|'
-    r'într-un|într-o|acest|această|acestea|aceștia|decât|dar|sau|ori|'
+    r'într-un|într-o|acest|această|aceasta|acesta|acestea|aceștia|decât|dar|sau|ori|'
     r'foarte|bine|mai|după|prin|dintre|doar|încă|aici|acolo|'
     r'președintele|guvernul|România|român[ăi]?|moldov[ae]|București|'
     r'ce|nu|da|și|la|din|pe|cu|de|un|o|al|ai|ale|că|ca|'
     r'eu|tu|el|ea|noi|voi|ei|ele|'
     r'vreau|vrei|vrea|avem|aveți|au|'
     r'știi|știe|știm|fac|faci|face|facem|'
-    r'bună|salut|mulțumesc|te rog)\b',
+    r'bună|salut|mulțumesc|te rog|'
+    # Common short words often typed without diacritics
+    r'va|sa|fi|ar|am|as|ii|le|se|ne|mi|ti|si|ia|'
+    r'in|din|pri[nm]|sub|spre|peste|langa|'
+    r'asta|aia|acea|acel|aceea|acela|'
+    r'iar|nici|tot|daca|asa|deci|insa|ceva|cineva|nimeni|'
+    r'prea|chiar|atunci|acum|mereu|seara|azi|ieri|maine|'
+    r'juca|joaca|meci|echipa|cupa|mondiala|'
+    r'cand|unde|cum|cat|cati|cate)\b',
     re.IGNORECASE | re.UNICODE,
 )
 
@@ -155,8 +163,9 @@ def detect_language(text: str) -> str:
     if has_diacritics:
         return "ron"
 
-    # If ≥15% of words match Romanian markers, call it Romanian
-    if ro_hits / word_count >= 0.15:
+    # If ≥12% of words match Romanian markers, call it Romanian
+    # (lowered from 15% to catch short sentences typed without diacritics)
+    if ro_hits / word_count >= 0.12:
         return "ron"
 
     return "eng"
@@ -165,6 +174,21 @@ def detect_language(text: str) -> str:
 # ═══════════════════════════════════════════════════════════════════════════
 #  Translation Functions
 # ═══════════════════════════════════════════════════════════════════════════
+
+def _strip_role_prefix(text: str) -> str:
+    """Remove role-prefix artifacts that SeamlessM4T sometimes hallucinates.
+
+    The translation model occasionally prepends words like 'assistant',
+    'asistent', or similar role labels — especially on the first inference.
+    """
+    # Pattern: optional role word at the very start, followed by optional
+    # punctuation/whitespace, then the actual content.
+    cleaned = re.sub(
+        r'^(?:asistent[aă]?|assistant|assistent)\s*[:\-–—]?\s*',
+        '', text, count=1, flags=re.IGNORECASE,
+    )
+    return cleaned if cleaned else text
+
 
 def _translate(text: str, src_lang: str, tgt_lang: str) -> str:
     """Translate *text* from *src_lang* to *tgt_lang* using SeamlessM4T.
@@ -193,7 +217,7 @@ def _translate(text: str, src_lang: str, tgt_lang: str) -> str:
             output_tokens[0].tolist()[0],
             skip_special_tokens=True,
         )
-        return translated.strip()
+        return _strip_role_prefix(translated.strip())
 
     except Exception as exc:
         print(f"  {RED}✖  Translation error: {exc}{RESET}")

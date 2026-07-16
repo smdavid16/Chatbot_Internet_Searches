@@ -39,7 +39,7 @@ from config import (
     BIZIDAY_RELEVANCE_THRESHOLD,
 )
 from search_cache import SearchCache
-from index_biziday import search_biziday, search_biziday_formatted, sync_latest_articles
+from index_biziday import search_biziday, search_biziday_formatted
 from translator import translate_to_english, translate_to_romanian, get_loaded_model_name
 
 # Terminal colours
@@ -60,36 +60,38 @@ _cache = SearchCache(
 )
 
 SYSTEM_PROMPT = textwrap.dedent("""\
-    You are a helpful assistant with access to a local news database
-    and internet search tools.
+    You are a helpful assistant with access to a local news database and internet search tools.
 
-    IMPORTANT — TOOL PRIORITY ORDER:
+## Important — Tool Priority Order
 
-    1. LOCAL NEWS FIRST: Before you respond, the system automatically
-       searches the local Biziday.ro news database.  If a
-       [LOCAL NEWS RESULTS] block is present in the conversation,
-       check whether those articles DIRECTLY ANSWER the user's
-       question.  If they do, use them.  If they do NOT answer
-       the question (e.g. they are about a different topic), IGNORE
-       them and use google_search instead.
+1. **LOCAL NEWS FIRST:** Before you respond, the system automatically searches the local Biziday.ro news database. When `[LOCAL NEWS RESULTS]` are provided, carefully read the Content sections and synthesize your answer from them. Cite the source URLs. If you need more detail, call the `search_biziday_news` tool.
 
-    2. WEB SEARCH: Use google_search for:
-       - Factual questions about people, places, or history (e.g., "Who is X?", "When was Y born?").
-       - When no [LOCAL NEWS RESULTS] were provided.
-       - When the provided articles do not answer the question.
-       - When the user is asking about something outside news coverage.
+2. **WEB SEARCH:** Use `google_search` for:
+   * Factual questions about people, places, or history (e.g., "Who is X?", "When was Y born?").
+   * When no `[LOCAL NEWS RESULTS]` were provided.
+   * When the provided articles do not answer the question AND you already tried `search_biziday_news`.
+   * When the user is asking about something outside news coverage.
 
-    3. SPECIAL TOOLS:
-       - get_current_datetime: ONLY for "what time/date is it".
-       - get_current_weather: ONLY for weather questions.
+3. **SPECIAL TOOLS:**
+   * `get_current_datetime`: ONLY for "what time/date is it".
+   * `get_current_weather`: ONLY for weather questions.
 
-    RULES:
-    - Your training data is OUTDATED.  Never answer factual questions
-      from memory.  Always rely on tool results or provided context.
-    - ALWAYS answer about the topic the USER asked about.  Do NOT
-      change the topic to something you saw in [LOCAL NEWS RESULTS].
-    - Always include source URLs in your answer.
-    - If local results are insufficient, supplement with google_search.
+---
+
+## Rules
+
+* **Your training data is OUTDATED.** Never answer factual questions from memory. Always rely on tool results or provided context.
+* **ALWAYS answer about the topic the USER asked about.** Do NOT change the topic to something you saw in `[LOCAL NEWS RESULTS]`.
+* Always include source URLs in your answer.
+* If local results are insufficient, try `search_biziday_news` first. If still insufficient, supplement with `google_search`.
+* **SEARCH QUERIES MUST BE SHORT.** When calling `google_search`, use short, natural queries of 3–6 words like a real person would type. Examples: "World Cup semi finals tomorrow", "weather in Bucharest". Do NOT stuff keywords or add redundant terms. If you need to include a year in your search query, ALWAYS use the current year provided below. Never use past years like 2023 or 2024 unless the user specifically asks for them.
+
+---
+
+## Current Date & Time
+
+* The current date and time in Bucharest (Europe/Bucharest, EET/EEST) is provided below and refreshed every turn. Use it to understand temporal references like "today", "yesterday", "this week", etc.
+* Current Bucharest time: `{bucharest_time}`
 """)
 
 
@@ -560,8 +562,8 @@ def _prefetch_biziday(query: str) -> str | None:
     if not relevant:
         return None
 
-    # Limit to top 3 to avoid overwhelming the small model's context
-    relevant = relevant[:3]
+    # Limit to top 5 to avoid overwhelming the small model's context
+    relevant = relevant[:5]
 
     # Format for injection into conversation
     parts = []
@@ -570,16 +572,14 @@ def _prefetch_biziday(query: str) -> str | None:
         part += f"URL: {m['url']}\n"
         part += f"Date: {m['timestamp']}\n"
         body = m["body_en"]
-        if len(body) > 1000:
-            body = body[:1000] + "\n[…truncated]"
+        if len(body) > 3000:
+            body = body[:3000] + "\n[…truncated]"
         part += f"Content:\n{body}"
         parts.append(part)
 
     return (
         "[LOCAL NEWS RESULTS]\n"
-        "These articles MAY be relevant. Use them ONLY if they directly "
-        "answer the user's question. If they are about a different topic, "
-        "IGNORE them and use google_search instead.\n\n"
+        "The following news articles were retrieved from the local database. READ the full content below and base your answer on them. If you need more detail from any article, call `search_biziday_news` with a refined query. Only use `google_search` if these articles are about a completely different topic.\n\n"
         + "\n\n".join(parts)
     )
 
@@ -612,11 +612,43 @@ _FACTUAL_KEYWORDS = re.compile(
 )
 
 
+def _parse_text_tool_calls(content: str) -> list[dict] | None:
+    """Detect tool calls written as plain JSON in model output.
+
+    Some models (e.g. llama3.1) sometimes emit tool calls as text rather
+    than through the structured API.  This helper scans for JSON objects
+    that look like ``{"name": "<tool>", "parameters": {…}}`` and returns
+    them as a list of dicts with keys ``name`` and ``arguments``, or
+    None if nothing was found.
+    """
+    if not content:
+        return None
+
+    # Find all JSON-like objects in the text
+    results = []
+    for match in re.finditer(
+        r'\{\s*"name"\s*:\s*"(\w+)"\s*,\s*"parameters"\s*:\s*(\{[^}]*\})\s*\}',
+        content,
+    ):
+        fn_name = match.group(1)
+        if fn_name not in TOOL_REGISTRY:
+            continue
+        try:
+            fn_args = json.loads(match.group(2))
+            results.append({"name": fn_name, "arguments": fn_args})
+        except json.JSONDecodeError:
+            continue
+
+    return results if results else None
+
+
 def agent_turn(messages: list[dict]) -> str:
     """Run a single agent turn: call the model, execute any tool calls,
     and loop until the model produces a final text response."""
 
     used_tool = False
+    used_google = False
+    nudged_summarize = False
     prefetch_injected = False
 
     # ── Auto-prefetch: query local news DB before the model runs ────────
@@ -631,7 +663,9 @@ def agent_turn(messages: list[dict]) -> str:
             )
             break
 
-    biziday_context = _prefetch_biziday(user_query)
+    user_query_en, _ = translate_to_english(user_query)
+
+    biziday_context = _prefetch_biziday(user_query_en)
     if biziday_context:
         print(f"  {DIM}📰  Found relevant local news — injecting context…{RESET}")
         messages.append({
@@ -645,6 +679,10 @@ def agent_turn(messages: list[dict]) -> str:
             model=MODEL_NAME,
             messages=messages,
             tools=TOOLS,
+            options={
+                "repeat_penalty": 1.3,    # Penalise repetition (default 1.1)
+                "repeat_last_n": 256,     # Look back further for repeats (default 64)
+            },
         )
 
         assistant_msg = response.message
@@ -652,9 +690,37 @@ def agent_turn(messages: list[dict]) -> str:
         # If no tool calls, we have our final answer — but check if the
         # model skipped searching for a factual question.
         if not assistant_msg.tool_calls:
-            # If prefetch already gave the model context, accept its
-            # answer — don't nudge it into calling another tool.
-            if prefetch_injected:
+            answer_text = (assistant_msg.content or "").strip()
+
+            # ── Check for tool calls written as plain text ───────────
+            # Some models (e.g. llama3.1) emit tool calls as JSON in
+            # their content instead of using the structured API.
+            text_tools = _parse_text_tool_calls(answer_text)
+            if text_tools and iteration < MAX_TOOL_ITERATIONS - 1:
+                print(f"  {DIM}🔧  Detected text-based tool call(s) — executing…{RESET}")
+                messages.append({"role": "assistant", "content": answer_text})
+                for tc in text_tools:
+                    fn_name = tc["name"]
+                    fn_args = tc["arguments"]
+                    if fn_name == "google_search":
+                        used_google = True
+                    print(f"  {YELLOW}⚙  Tool call: {fn_name}({json.dumps(fn_args)}){RESET}")
+                    func = TOOL_REGISTRY.get(fn_name)
+                    if func:
+                        try:
+                            result = func(**fn_args)
+                        except Exception as exc:
+                            result = f"Tool execution error: {exc}"
+                    else:
+                        result = f"Unknown tool: {fn_name}"
+                    messages.append({"role": "tool", "content": str(result)})
+                used_tool = True
+                continue
+
+            # If prefetch gave context AND the model produced a real answer,
+            # accept it.  But if the answer is empty, fall through to the
+            # google_search nudge below.
+            if prefetch_injected and len(answer_text) >= 20:
                 return assistant_msg.content
 
             if not used_tool and iteration < 2:
@@ -667,25 +733,70 @@ def agent_turn(messages: list[dict]) -> str:
                         user_msg = m.get("content", "") if isinstance(m, dict) else getattr(m, "content", "")
                         break
 
-                if user_msg and _FACTUAL_KEYWORDS.search(user_msg):
-                    print(f"  {DIM}🔄  Nudging model to use tools first…{RESET}")
-                    # Don't append the non-search answer; instead nudge
-                    messages.append({
-                        "role": "user",
-                        "content": (
-                            "You must use a tool to answer this question. "
-                            "If the question is about recent news or events, use search_biziday_news. "
-                            "If the question is a general factual query (e.g. 'Who is X?'), use google_search. "
-                            "Do NOT answer from memory. Call a tool now."
-                        ),
-                    })
+                user_msg_en, _ = translate_to_english(user_msg)
+
+                if user_msg_en and _FACTUAL_KEYWORDS.search(user_msg_en):
+                    if prefetch_injected:
+                        print(f"  {DIM}🔄  Prefetch was insufficient — nudging model to try search_biziday_news…{RESET}")
+                        messages.append({
+                            "role": "user",
+                            "content": (
+                                "The provided local news results were insufficient. "
+                                "Use search_biziday_news to find more details. "
+                                "Do NOT answer from memory. Call search_biziday_news now."
+                            ),
+                        })
+                    else:
+                        print(f"  {DIM}🔄  Nudging model to use tools first…{RESET}")
+                        # Don't append the non-search answer; instead nudge
+                        messages.append({
+                            "role": "user",
+                            "content": (
+                                "You must use a tool to answer this question. "
+                                "Use google_search to look it up on the web. "
+                                "Do NOT answer from memory. Call google_search now."
+                            ),
+                        })
                     continue
+
+            # If the model used a tool but came back with an empty/useless
+            # answer, and it never tried google_search, nudge it to do so.
+            if used_tool and not used_google and iteration < MAX_TOOL_ITERATIONS - 1 and len(answer_text) < 20:
+                print(f"  {DIM}🔄  Tool result was insufficient — nudging model to try google_search…{RESET}")
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "The previous tool did not return useful results. "
+                        "Now use google_search to find the answer on the web. "
+                        "Do NOT answer from memory. Call google_search now."
+                    ),
+                })
+                continue
+
+            # If even google_search was used but the answer is still empty,
+            # nudge the model ONE TIME to actually write a response.
+            if used_google and not nudged_summarize and len(answer_text) < 20 and iteration < MAX_TOOL_ITERATIONS - 1:
+                nudged_summarize = True
+                print(f"  {DIM}🔄  Empty response after search — nudging model to summarize results…{RESET}")
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "You already searched and received results. "
+                        "Now write a helpful answer based on those results. "
+                        "Summarize the key information and include source URLs."
+                    ),
+                })
+                continue
 
             return assistant_msg.content
 
         # Process each tool call
         messages.append(assistant_msg)
         used_tool = True
+        for tc in assistant_msg.tool_calls:
+            if tc.function.name == "google_search":
+                used_google = True
+                break
 
         for tool_call in assistant_msg.tool_calls:
             fn_name = tool_call.function.name
@@ -733,10 +844,9 @@ def main():
         print(f"{BOLD}{CYAN}║   Translation: {RED}disabled{CYAN}                      ║{RESET}")
     print(f"{BOLD}{CYAN}╚══════════════════════════════════════════════╝{RESET}")
     print(f"{DIM}Type your message and press Enter. Type 'quit' or 'exit' to leave.{RESET}")
+    print(f"{DIM}Commands: /reset (new conversation)  /clear-cache  /cache-stats{RESET}")
     print(f"{DIM}Romanian input is auto-detected and translated.{RESET}\n")
 
-    # ── Auto-sync Biziday news at startup ─────────────────────────
-    sync_latest_articles(count=20)
     print()
 
     # Conversation history persists across turns for memory
@@ -772,14 +882,35 @@ def main():
             print(f"   Similarity threshold: {stats['similarity_threshold']}\n")
             continue
 
+        if user_input.lower() == "/reset":
+            messages.clear()
+            messages.append({"role": "system", "content": SYSTEM_PROMPT})
+            print(f"{YELLOW}🔄  Conversation reset — starting fresh.{RESET}\n")
+            continue
+
         # ── Translate user input (Romanian → English if needed) ───────
         english_input, was_translated = translate_to_english(user_input)
         if was_translated:
             print(f"   Translated: \"{english_input}\"{RESET}")
+            # Include original text so the model can see proper names/spelling
+            content = f"[Original: {user_input}]\n{english_input}"
+        else:
+            content = english_input
 
-        messages.append({"role": "user", "content": english_input})
+        messages.append({"role": "user", "content": content})
 
         print(f"\n{DIM}Thinking…{RESET}")
+
+        # Refresh the system message with the current Bucharest time
+        try:
+            now_bucharest = datetime.now(ZoneInfo("Europe/Bucharest"))
+        except Exception:
+            # Fallback: UTC+3 (EEST summer) if tzdata is missing
+            from datetime import timedelta
+            now_bucharest = datetime.now(timezone(timedelta(hours=3)))
+        messages[0]["content"] = SYSTEM_PROMPT.format(
+            bucharest_time=now_bucharest.strftime("%A, %d %B %Y, %H:%M:%S %Z")
+        )
 
         try:
             answer = agent_turn(messages)

@@ -161,6 +161,7 @@ def index_articles(json_path: str = DEFAULT_JSON_PATH) -> int:
                 "url": url,
                 "timestamp": timestamp,
                 "body_ro": body_ro_stored,
+                "source": "biziday.ro",
             }],
         )
         indexed += 1
@@ -239,6 +240,7 @@ def sync_latest_articles(count: int = 20, json_path: str = DEFAULT_JSON_PATH) ->
                 "url": url,
                 "timestamp": timestamp,
                 "body_ro": body_ro_stored,
+                "source": "biziday.ro",
             }],
         )
         
@@ -331,8 +333,8 @@ def search_biziday_formatted(query: str, n_results: int = BIZIDAY_SEARCH_RESULTS
         part += f"Date: {m['timestamp']}\n"
         # Include the article body, truncated for context window
         body = m["body_en"]
-        if len(body) > 2000:
-            body = body[:2000] + "\n[…truncated]"
+        if len(body) > 4000:
+            body = body[:4000] + "\n[…truncated]"
         part += f"Content:\n{body}"
         parts.append(part)
 

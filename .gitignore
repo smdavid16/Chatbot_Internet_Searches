@@ -5,3 +5,24 @@ __pycache__/
 *.bin
 chroma.sqlite3
 stiriBiziday.json
+
+# UiPath specific hidden folders
+.local/
+.settings/
+.objects/
+.project/
+.screenshots/
+.storage/
+.templates/
+.tmh/
+.entities/
+
+# Log files
+*.log
+ingest.log
+
+# Temporary files and scraped data
+temp.html
+UiPath.Platform.ResourceHandling.LocalResourceImpl
+scraped_articles.csv
+seen_urls.txt

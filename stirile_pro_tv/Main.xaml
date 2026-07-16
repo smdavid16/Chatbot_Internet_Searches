@@ -1,0 +1,267 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="Main" VisualBasic.Settings="{x:Null}" sap2010:WorkflowViewState.IdRef="ActivityBuilder_1" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Drawing;assembly=System.Drawing.Common" xmlns:sd1="clr-namespace:System.Drawing;assembly=System.Drawing.Primitives" xmlns:sd2="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uix="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Activities.Expressions</x:String>
+      <x:String>System.Activities.Validation</x:String>
+      <x:String>System.Activities.XamlIntegration</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>Microsoft.VisualBasic.Activities</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Diagnostics</x:String>
+      <x:String>System.Drawing</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Net.Mail</x:String>
+      <x:String>System.Xml</x:String>
+      <x:String>System.Xml.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>System.Windows.Markup</x:String>
+      <x:String>System.Runtime.Serialization</x:String>
+      <x:String>UiPath.UIAutomationNext.Enums</x:String>
+      <x:String>UiPath.UIAutomationCore.Contracts</x:String>
+      <x:String>UiPath.UIAutomationNext.Models</x:String>
+      <x:String>UiPath.UIAutomationNext.Activities</x:String>
+      <x:String>UiPath.Shared.Activities</x:String>
+      <x:String>UiPath.Platform.ObjectLibrary</x:String>
+      <x:String>UiPath.Platform.SyncObjects</x:String>
+      <x:String>System.ComponentModel</x:String>
+      <x:String>System.Xml.Serialization</x:String>
+      <x:String>UiPath.UIAutomationNext.Models.ExtractData</x:String>
+      <x:String>System.Reflection</x:String>
+      <x:String>System.Linq.Expressions</x:String>
+      <x:String>UiPath.Platform.ResourceHandling</x:String>
+      <x:String>UiPath.DataTableUtilities</x:String>
+      <x:String>UiPath.UIAutomationNext.Activities.Models</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>UiPath.CSV.Activities</x:String>
+      <x:String>UiPath.CSV</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>PresentationCore</AssemblyReference>
+      <AssemblyReference>PresentationFramework</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.Collections.Immutable</AssemblyReference>
+      <AssemblyReference>System.Collections.NonGeneric</AssemblyReference>
+      <AssemblyReference>System.ComponentModel</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.EventBasedAsync</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.Primitives</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Configuration.ConfigurationManager</AssemblyReference>
+      <AssemblyReference>System.Console</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.Data.SqlClient</AssemblyReference>
+      <AssemblyReference>System.Drawing</AssemblyReference>
+      <AssemblyReference>System.Drawing.Common</AssemblyReference>
+      <AssemblyReference>System.Drawing.Primitives</AssemblyReference>
+      <AssemblyReference>System.IO.FileSystem.AccessControl</AssemblyReference>
+      <AssemblyReference>System.IO.FileSystem.DriveInfo</AssemblyReference>
+      <AssemblyReference>System.IO.FileSystem.Watcher</AssemblyReference>
+      <AssemblyReference>System.IO.Packaging</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Linq.Async</AssemblyReference>
+      <AssemblyReference>System.Linq.Expressions</AssemblyReference>
+      <AssemblyReference>System.Linq.Parallel</AssemblyReference>
+      <AssemblyReference>System.Linq.Queryable</AssemblyReference>
+      <AssemblyReference>System.Memory</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Private.DataContractSerialization</AssemblyReference>
+      <AssemblyReference>System.Private.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.Private.Uri</AssemblyReference>
+      <AssemblyReference>System.Private.Xml</AssemblyReference>
+      <AssemblyReference>System.Reflection.DispatchProxy</AssemblyReference>
+      <AssemblyReference>System.Reflection.Metadata</AssemblyReference>
+      <AssemblyReference>System.Reflection.MetadataLoadContext</AssemblyReference>
+      <AssemblyReference>System.Reflection.TypeExtensions</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Formatters</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Permissions</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities.Design</AssemblyReference>
+      <AssemblyReference>UiPath.OCR.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Platform</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationCore</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationNext</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationNext.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>WindowsBase</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Main Sequence" sap:VirtualizedContainerService.HintSize="1008,3214.5" sap2010:WorkflowViewState.IdRef="Sequence_2">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd2:DataTable" Name="dtResults" />
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:BuildDataTable DataTable="[dtResults]" DisplayName="Build Data Table" sap:VirtualizedContainerService.HintSize="560,92" sap2010:WorkflowViewState.IdRef="BuildDataTable_1" TableInfo="&lt;NewDataSet&gt;&#xA;  &lt;xs:schema id=&quot;NewDataSet&quot; xmlns=&quot;&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:msdata=&quot;urn:schemas-microsoft-com:xml-msdata&quot;&gt;&#xA;    &lt;xs:element name=&quot;NewDataSet&quot; msdata:IsDataSet=&quot;true&quot; msdata:MainDataTable=&quot;TableName&quot; msdata:UseCurrentLocale=&quot;true&quot;&gt;&#xA;      &lt;xs:complexType&gt;&#xA;        &lt;xs:choice minOccurs=&quot;0&quot; maxOccurs=&quot;unbounded&quot;&gt;&#xA;          &lt;xs:element name=&quot;TableName&quot;&gt;&#xA;            &lt;xs:complexType&gt;&#xA;              &lt;xs:sequence&gt;&#xA;                &lt;xs:element name=&quot;URL&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Title&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Category&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;ScrapedAt&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;FullText&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;              &lt;/xs:sequence&gt;&#xA;            &lt;/xs:complexType&gt;&#xA;          &lt;/xs:element&gt;&#xA;        &lt;/xs:choice&gt;&#xA;      &lt;/xs:complexType&gt;&#xA;    &lt;/xs:element&gt;&#xA;  &lt;/xs:schema&gt;&#xA;  &lt;TableName&gt;&#xA;    &lt;URL&gt;text&lt;/URL&gt;&#xA;    &lt;Title&gt;text&lt;/Title&gt;&#xA;  &lt;/TableName&gt;&#xA;&lt;/NewDataSet&gt;" />
+    <uix:NApplicationCard AttachMode="ByInstance" DisplayName="Chrome Ultimele Știri de azi - Cele mai noi i" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="560,3099.5" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" InteractionMode="DebuggerApi" ScopeGuid="19184ea4-764b-4679-bce0-a6c2798f1cba" Version="V2">
+      <uix:NApplicationCard.Body>
+        <ActivityAction x:TypeArguments="x:Object">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="x:Object" Name="WSSessionData" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Do" sap:VirtualizedContainerService.HintSize="558,2904.5" sap2010:WorkflowViewState.IdRef="Sequence_1">
+            <Sequence.Variables>
+              <Variable x:TypeArguments="sd2:DataTable" Default="[New System.Data.DataTable()]" Name="dtArticles" />
+              <Variable x:TypeArguments="x:String" Name="seenUrlsRaw" />
+              <Variable x:TypeArguments="scg:List(x:String)" Name="seenUrls" />
+            </Sequence.Variables>
+            <sap:WorkflowViewStateService.ViewState>
+              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+              </scg:Dictionary>
+            </sap:WorkflowViewStateService.ViewState>
+            <uix:NExtractDataGeneric x:TypeArguments="sd2:DataTable" ContinueOnError="True" DisplayName="Extract Table Data 'DIV(2)'" ExtractDataSettings="&lt;Table xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' Type='Structured' AddCvHeader='true' IsScrollEnabled='false'&gt;&#xA;&#x9;&lt;Column xsi:type='DataColumn' ReferenceName='Column0' Name='Title'&gt;&#xA;&#x9;&#x9;&lt;IsValidName&gt;true&lt;/IsValidName&gt;&#xA;&#x9;&#x9;&lt;ValidationErrorMessage /&gt;&#xA;&#x9;&#x9;&lt;IsExtra&gt;false&lt;/IsExtra&gt;&#xA;&#x9;&#x9;&lt;CanExtractSimilar&gt;true&lt;/CanExtractSimilar&gt;&#xA;&#x9;&#x9;&lt;Format xsi:type='TextColumnFormat' /&gt;&#xA;&#x9;&lt;/Column&gt;&#xA;&#x9;&lt;Column xsi:type='DataColumn' ReferenceName='Column1' Name='URL'&gt;&#xA;&#x9;&#x9;&lt;IsValidName&gt;true&lt;/IsValidName&gt;&#xA;&#x9;&#x9;&lt;ValidationErrorMessage /&gt;&#xA;&#x9;&#x9;&lt;IsExtra&gt;true&lt;/IsExtra&gt;&#xA;&#x9;&#x9;&lt;CanExtractSimilar&gt;true&lt;/CanExtractSimilar&gt;&#xA;&#x9;&#x9;&lt;Format xsi:type='TextColumnFormat' /&gt;&#xA;&#x9;&lt;/Column&gt;&#xA;&lt;/Table&gt;" ExtractMetadata="&lt;extract&gt;&lt;column exact='1' name='Column0' attr='fulltext' name2='Column1' attr2='href'&gt;&lt;webctrl tag='article' /&gt;&lt;webctrl tag='div' idx='3' /&gt;&lt;webctrl tag='h2' idx='1' /&gt;&lt;webctrl tag='a' idx='1' /&gt;&lt;/column&gt;&lt;/extract&gt;" ExtractedData="[dtArticles]" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="524,143" sap2010:WorkflowViewState.IdRef="NExtractDataGeneric`1_3" LimitExtractionTo="Rows" MaximumResults="20" ScopeIdentifier="19184ea4-764b-4679-bce0-a6c2798f1cba" Version="V5">
+              <uix:NExtractDataGeneric.Target>
+                <uix:TargetAnchorable BrowserURL="https://stirileprotv.ro/ultimele-stiri/" ContentHash="dlCiqT-IbkSZ4VNiD40t4A" DesignTimeRectangle="642, 680, 1108, 2784" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl class='content' parentid='page_container' tag='DIV' /&gt;" Guid="66fab0b9-0f2f-4a9a-8087-5e341290f9f4" InformativeScreenshot="7d9e4a554c0311cd1b74ac01298af175.jpg" Reference="VFviN_J14k6UVN0uKsKt6g/vwZwjmx-t0CTbumBXaOTpg" ScopeSelectorArgument="&lt;html app='chrome.exe' title='Ultimele Știri de azi - Cele mai noi informații din România și internaționale - Știrile ProTV' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+              </uix:NExtractDataGeneric.Target>
+            </uix:NExtractDataGeneric>
+            <If Condition="[dtArticles IsNot Nothing AndAlso dtArticles.Rows.Count &gt; 0]" DisplayName="If dtArticles has rows" sap:VirtualizedContainerService.HintSize="524,2701.5" sap2010:WorkflowViewState.IdRef="If_3">
+              <If.Then>
+                <Sequence DisplayName="Take 20" sap:VirtualizedContainerService.HintSize="522,2551" sap2010:WorkflowViewState.IdRef="Sequence_7">
+                  <sap:WorkflowViewStateService.ViewState>
+                    <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                      <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                    </scg:Dictionary>
+                  </sap:WorkflowViewStateService.ViewState>
+                  <Assign sap:VirtualizedContainerService.HintSize="488,176" sap2010:WorkflowViewState.IdRef="Assign_1">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="sd2:DataTable">[dtArticles]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="sd2:DataTable">[dtArticles.AsEnumerable().Take(20).CopyToDataTable()]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                  <ui:ReadTextFile FileName="{x:Null}" Content="[seenUrlsRaw]" DisplayName="Read Text File" File="[LocalResource.FromPath(&quot;seen_urls.txt&quot;)]" sap:VirtualizedContainerService.HintSize="488,124" sap2010:WorkflowViewState.IdRef="ReadTextFile_1" />
+                  <Assign sap:VirtualizedContainerService.HintSize="488,176" sap2010:WorkflowViewState.IdRef="Assign_2">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="scg:List(x:String)">[seenUrls]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="scg:List(x:String)">[seenUrlsRaw.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).ToList()]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                  <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[dtArticles]" DisplayName="For Each Row in Data Table" sap:VirtualizedContainerService.HintSize="488,1172" sap2010:WorkflowViewState.IdRef="ForEachRow_1">
+                    <ui:ForEachRow.Body>
+                      <ActivityAction x:TypeArguments="sd2:DataRow">
+                        <ActivityAction.Argument>
+                          <DelegateInArgument x:TypeArguments="sd2:DataRow" Name="CurrentRow" />
+                        </ActivityAction.Argument>
+                        <Sequence DisplayName="Body" sap:VirtualizedContainerService.HintSize="486,989" sap2010:WorkflowViewState.IdRef="Sequence_3">
+                          <sap:WorkflowViewStateService.ViewState>
+                            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                            </scg:Dictionary>
+                          </sap:WorkflowViewStateService.ViewState>
+                          <If Condition="[Not seenUrls.Contains(CurrentRow(&quot;URL&quot;).ToString.Trim())]" sap:VirtualizedContainerService.HintSize="452,929" sap2010:WorkflowViewState.IdRef="If_1">
+                            <If.Then>
+                              <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="450,708" sap2010:WorkflowViewState.IdRef="Sequence_4">
+                                <Sequence.Variables>
+                                  <Variable x:TypeArguments="x:String" Name="fullText" />
+                                </Sequence.Variables>
+                                <sap:WorkflowViewStateService.ViewState>
+                                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                  </scg:Dictionary>
+                                </sap:WorkflowViewStateService.ViewState>
+                                <uix:NGoToUrl DisplayName="Go To URL - " sap:VirtualizedContainerService.HintSize="416,123.5" sap2010:WorkflowViewState.IdRef="NGoToUrl_1" ScopeIdentifier="19184ea4-764b-4679-bce0-a6c2798f1cba" Url="[CurrentRow(&quot;URL&quot;).ToString]" Version="V5" />
+                                <uix:NGetText DisplayName="Get Text 'Șeful statului a făcut …'" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,143" sap2010:WorkflowViewState.IdRef="NGetText_1" ScopeIdentifier="19184ea4-764b-4679-bce0-a6c2798f1cba" TextString="[fullText]" Version="V5">
+                                  <uix:NGetText.Target>
+                                    <uix:TargetAnchorable BrowserURL="stirileprotv.ro/stiri/financiar/nicusor-dan-despre-deficitul-bugetar-stam-chiar-mai-bine-decat-prognozat.html" ContentHash="uxMLD8iw3Ei_JqPLJVIIaA" DesignTimeRectangle="574, -375, 1244, 2789" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;webctrl class='article--text' parentid='bottomArticle' tag='DIV' /&gt;" Guid="9c96707a-f87f-4ef1-947c-ec2061c7eceb" InformativeScreenshot="85e3ed4656d597a5bec0be1a06b385be.jpg" Reference="VFviN_J14k6UVN0uKsKt6g/5iukNL1GekepTn6KBgIc6w" ScopeSelectorArgument="&lt;html app='chrome.exe' title='Președintele Nicușor Dan, despre deficitul bugetar: ”Stăm chiar mai bine decât prognozat” - Știrile ProTV' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                                  </uix:NGetText.Target>
+                                </uix:NGetText>
+                                <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{CurrentRow(&quot;URL&quot;).ToString.Trim(), CurrentRow(&quot;Title&quot;).ToString, CurrentRow(&quot;URL&quot;).ToString.Split(&quot;/&quot;c)(4), DateTime.Now.ToString(&quot;yyyy-MM-dd HH:mm&quot;), fullText}]" DataTable="[dtResults]" DisplayName="Add Data Row" sap:VirtualizedContainerService.HintSize="416,222.5" sap2010:WorkflowViewState.IdRef="AddDataRow_1" />
+                                <ui:AppendLine File="{x:Null}" DisplayName="Append Line" FileName="[LocalResource.FromPath(&quot;seen_urls.txt&quot;).ToString()]" sap:VirtualizedContainerService.HintSize="416,159" sap2010:WorkflowViewState.IdRef="AppendLine_1" Text="[CurrentRow(&quot;URL&quot;).ToString.Trim()]" UseDefaultEncoding="False" />
+                              </Sequence>
+                            </If.Then>
+                            <If.Else>
+                              <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="450,90.5" sap2010:WorkflowViewState.IdRef="Sequence_5">
+                                <sap:WorkflowViewStateService.ViewState>
+                                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                  </scg:Dictionary>
+                                </sap:WorkflowViewStateService.ViewState>
+                              </Sequence>
+                            </If.Else>
+                          </If>
+                        </Sequence>
+                      </ActivityAction>
+                    </ui:ForEachRow.Body>
+                  </ui:ForEachRow>
+                  <If Condition="[dtResults IsNot Nothing AndAlso dtResults.Rows.Count &gt; 0]" DisplayName="If dtResults has rows" sap:VirtualizedContainerService.HintSize="488,843" sap2010:WorkflowViewState.IdRef="If_2">
+                    <If.Then>
+                      <Sequence DisplayName="Export Results" sap:VirtualizedContainerService.HintSize="450,622" sap2010:WorkflowViewState.IdRef="Sequence_6">
+                        <sap:WorkflowViewStateService.ViewState>
+                          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                          </scg:Dictionary>
+                        </sap:WorkflowViewStateService.ViewState>
+                        <Assign sap:VirtualizedContainerService.HintSize="416,176" sap2010:WorkflowViewState.IdRef="Assign_4">
+                          <Assign.To>
+                            <OutArgument x:TypeArguments="sd2:DataTable">[dtResults]</OutArgument>
+                          </Assign.To>
+                          <Assign.Value>
+                            <InArgument x:TypeArguments="sd2:DataTable">[dtResults.AsEnumerable().Where(Function(r) r("FullText").ToString.Trim() &lt;&gt; "").CopyToDataTable()]</InArgument>
+                          </Assign.Value>
+                        </Assign>
+                        <ui:AppendWriteCsvFile PathResource="{x:Null}" AddHeaders="True" CsvAction="Write" DataTable="[dtResults]" Delimitator="Comma" DelimitatorForViewModel="Comma" DisplayName="Write CSV" FilePath="scraped_articles.csv" sap:VirtualizedContainerService.HintSize="416,275" sap2010:WorkflowViewState.IdRef="AppendWriteCsvFile_1" ShouldQuote="True" />
+                        <ui:StartProcess WorkingDirectory="{x:Null}" Arguments="/c &quot;&quot;C:\Users\David\Documents\UiPath\Stirile Pro TV\run_all_ingestions.bat&quot;&quot;" DisplayName="Run All Ingestions Sequentially" FileName="cmd.exe" sap:VirtualizedContainerService.HintSize="416,111" sap2010:WorkflowViewState.IdRef="StartProcess_1" />
+                      </Sequence>
+                    </If.Then>
+                    <If.Else>
+                      <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="450,90.5" sap2010:WorkflowViewState.IdRef="Sequence_8">
+                        <sap:WorkflowViewStateService.ViewState>
+                          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                          </scg:Dictionary>
+                        </sap:WorkflowViewStateService.ViewState>
+                      </Sequence>
+                    </If.Else>
+                  </If>
+                </Sequence>
+              </If.Then>
+            </If>
+          </Sequence>
+        </ActivityAction>
+      </uix:NApplicationCard.Body>
+      <uix:NApplicationCard.OCREngine>
+        <ActivityFunc x:TypeArguments="sd:Image, scg:IEnumerable(scg:KeyValuePair(sd1:Rectangle, x:String))">
+          <ActivityFunc.Argument>
+            <DelegateInArgument x:TypeArguments="sd:Image" Name="Image" />
+          </ActivityFunc.Argument>
+        </ActivityFunc>
+      </uix:NApplicationCard.OCREngine>
+      <uix:NApplicationCard.TargetApp>
+        <uix:TargetApp Area="-13, -13, 3098, 1866" BrowserType="Chrome" ContentHash="mNt7eMCrx0KxqX1FcXsdJA" IconBase64="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" InformativeScreenshot="098d7c85db4ea1b37120bbdd8f7287ed.jpg" Reference="VFviN_J14k6UVN0uKsKt6g/rBvwojxBEUaMaYy0xThXiw" Selector="&lt;html app='chrome.exe' title='*Știrile ProTV*' /&gt;" Url="https://stirileprotv.ro/ultimele-stiri/" Version="V3" />
+      </uix:NApplicationCard.TargetApp>
+    </uix:NApplicationCard>
+  </Sequence>
+</Activity>
